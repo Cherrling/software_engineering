@@ -131,7 +131,7 @@ public:
     }
 
     
-    // 修改查找桥接词的函数
+    // 查找桥接词
     std::vector<std::string> findBridgeWords(const std::string& word1, const std::string& word2) {
         std::vector<std::string> bridgeWords;
         
@@ -141,54 +141,19 @@ public:
             return bridgeWords; // 空列表表示word1或word2不在图中
         }
         
-        // 广度优先搜索查找所有可能的路径中的节点
-        std::map<std::string, bool> visited;
-        std::map<std::string, bool> isBridge;
-        std::queue<std::string> queue;
-        
-        // 标记所有节点为未访问
-        for (const auto& node : adjacencyList) {
-            visited[node.first] = false;
-            isBridge[node.first] = false;
-        }
-        
-        // 开始BFS
-        queue.push(word1);
-        visited[word1] = true;
-        
-        while (!queue.empty()) {
-            std::string currentWord = queue.front();
-            queue.pop();
+        // 查找从word1出发的所有边
+        for (const auto& edge : adjacencyList[word1]) {
+            std::string potentialBridge = edge.to;
             
-            // 如果当前词不是起始词，则标记为桥接词
-            if (currentWord != word1 && currentWord != word2) {
-                isBridge[currentWord] = true;
-            }
-            
-            // 遍历当前词的所有相邻节点
-            for (const auto& edge : adjacencyList[currentWord]) {
-                std::string nextWord = edge.to;
-                
-                // 如果是终点词，标记路径上的所有单词为桥接词
-                if (nextWord == word2) {
-                    // 当前路径可以到达word2，currentWord是一个有效的中间节点
-                    if (currentWord != word1) {
-                        isBridge[currentWord] = true;
+            // 检查这个潜在的桥接词是否有一条边指向word2
+            if (adjacencyList.find(potentialBridge) != adjacencyList.end()) {
+                for (const auto& nextEdge : adjacencyList[potentialBridge]) {
+                    if (nextEdge.to == word2) {
+                        // 找到桥接词
+                        bridgeWords.push_back(potentialBridge);
+                        break;
                     }
                 }
-                
-                // 如果没有访问过，加入队列继续搜索
-                if (!visited[nextWord]) {
-                    visited[nextWord] = true;
-                    queue.push(nextWord);
-                }
-            }
-        }
-        
-        // 收集所有桥接词
-        for (const auto& item : isBridge) {
-            if (item.second && item.first != word1 && item.first != word2) {
-                bridgeWords.push_back(item.first);
             }
         }
         
@@ -641,6 +606,8 @@ public:
         if (adjacencyList.empty()) {
             return {};
         }
+        // 清空缓冲区
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         
         // 随机选择起始节点
         std::srand(std::time(nullptr));
@@ -657,9 +624,15 @@ public:
         std::vector<std::string> walkPath;
         walkPath.push_back(currentNode);
         
-        std::cout << "开始随机游走，起始节点: " << currentNode << std::endl;
-        std::cout << "按Enter键继续，输入'q'停止游走" << std::endl;
-        
+        // 在第一步游走前就询问用户
+        std::string input;
+        std::cout << "当前路径: " << currentNode << std::endl;
+        std::cout << "按Enter键继续，输入'q'停止游走: ";
+        std::getline(std::cin, input);
+        if (!input.empty() && (input[0] == 'q' || input[0] == 'Q')) {
+            std::cout << "用户停止游走" << std::endl;
+            return walkPath;
+        }
         while (true) {
             // 检查当前节点是否有出边
             if (adjacencyList[currentNode].empty()) {
