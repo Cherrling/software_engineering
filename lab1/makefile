@@ -21,4 +21,4 @@ $(TARGET): $(SRC)
 
 # 清理目标
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET) *.png *.dot *.txt
